@@ -57,3 +57,4 @@ jobs:
           JRELEASER_PROJECT_VERSION: ${{ env.DUKE_VERSION }}
         with:
           version: early-access
+          setup-java: false
