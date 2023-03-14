@@ -1,0 +1,10 @@
+#
+# Usage: java @duke ...
+#
+
+# --show-version
+# --show-module-resolution
+# -XX:StartFlightRecording:filename=.duke/recording.jfr,dumponexit=true
+
+--module-path .duke/lib
+--module run.duke/run.duke.Main
