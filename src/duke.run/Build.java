@@ -2,6 +2,7 @@ import static java.lang.System.err;
 import static java.lang.System.out;
 
 import java.lang.module.ModuleDescriptor.Version;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -12,7 +13,7 @@ import java.util.spi.ToolProvider;
 
 /** Duke's build program. */
 class Build {
-  public static void main(String... args) {
+  public static void main(String... args) throws Exception {
     var configuration = Configuration.of(System.getenv());
     out.println("Build Duke " + configuration.version());
 
@@ -28,14 +29,17 @@ class Build {
    * @param version {@code 0-dev}
    */
   record Configuration(Version version, String archive, Folders folders) {
-    record Folders(Path root, Path duke, Path lib, Path tmp) {
+    record Folders(Path root, Path duke, Path lib, Path tmp, Path classes) {
       static Folders ofCurrentWorkingDirectory() {
         return Folders.of(Path.of(""));
       }
 
       static Folders of(Path root) {
         var duke = root.resolve(".duke");
-        return new Folders(root, duke, duke.resolve("lib"), duke.resolve("tmp"));
+        var lib = duke.resolve("lib");
+        var tmp = duke.resolve("tmp");
+        var classes = tmp.resolve("classes").resolve("java-" + Runtime.version().feature());
+        return new Folders(root, duke, lib, tmp, classes);
       }
     }
 
@@ -45,15 +49,15 @@ class Build {
             "run.duke@development.jar",
             Folders.ofCurrentWorkingDirectory());
 
-    static Configuration of(Map<String, String> map) {
-      var version = configureModuleVersionWithBuildInformation(map);
-      var archive = map.getOrDefault("DUKE_ARCHIVE", DEFAULT.archive());
+    static Configuration of(Map<String, String> env) {
+      var version = configureModuleVersionWithBuildInformation(env);
+      var archive = env.getOrDefault("DUKE_ARCHIVE", DEFAULT.archive());
       var folders = Folders.ofCurrentWorkingDirectory();
       return new Configuration(version, archive, folders);
     }
 
-    static Version configureModuleVersionWithBuildInformation(Map<String, String> map) {
-      var version = map.getOrDefault("DUKE_VERSION", DEFAULT.version().toString());
+    static Version configureModuleVersionWithBuildInformation(Map<String, String> env) {
+      var version = env.getOrDefault("DUKE_VERSION", DEFAULT.version().toString());
       var build = new StringBuilder();
       var now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
       build.append(now.format(DateTimeFormatter.BASIC_ISO_DATE));
@@ -61,7 +65,7 @@ class Build {
       var sha = System.getenv("GITHUB_SHA");
       if (sha != null) build.append(sha, 0, Math.min(7, sha.length()));
       else build.append(now.format(DateTimeFormatter.ofPattern("HHmmss")));
-      return Version.parse(version + "+" + build);
+      return Version.parse(version + '+' + build);
     }
   }
 
@@ -78,21 +82,23 @@ class Build {
           "--module=run.duke",
           "--module-source-path=run.duke=src/run.duke/main/java",
           "-d",
-          configuration.folders().tmp());
+          configuration.folders().classes());
     }
 
-    void createJavaArchiveRunDuke() {
+    void createJavaArchiveRunDuke() throws Exception {
+      var folders = configuration.folders();
+      Files.createDirectories(folders.lib());
       run(
           "jar",
           "--create",
-          "--file=" + configuration.folders().lib().resolve(configuration.archive()),
+          "--file=" + folders.lib().resolve(configuration.archive()),
           "--module-version=" + configuration.version(),
           "--main-class=run.duke.Main",
           "-C",
-          configuration.folders().tmp().resolve("run.duke"),
+          folders.classes().resolve("run.duke"),
           ".",
           "-C",
-          configuration.folders().root().resolve("src/run.duke/main/java"),
+          folders.root().resolve("src/run.duke/main/java"),
           ".");
     }
   }
