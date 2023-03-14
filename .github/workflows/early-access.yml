@@ -1,0 +1,59 @@
+name: 'Early Access'
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+  workflow_dispatch:
+
+env:
+  DUKE_ARCHIVE: 'run.duke@early-access.jar'
+  DUKE_VERSION: '0-ea'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Check out repository'
+        uses: actions/checkout@v3
+      - name: 'Set up Java Development Kit'
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'oracle'
+          java-version: 17
+      - name: 'Build module run.duke@${{ env.DUKE_VERSION }}'
+        run: java src/duke.run/Build.java
+      - name: 'Describe module run.duke'
+        run: java --module-path .duke/lib --describe-module run.duke
+      - name: 'Launch Duke''s main program'
+        run: java @duke --version
+      - name: 'Upload artifact ci-build-${{ env.DUKE_VERSION }}'
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: duke-ci-build-${{ env.DUKE_VERSION }}
+          path: .duke
+
+  update-early-access-release:
+    needs: [ build ]
+    if: github.event_name == 'push' && github.repository == 'sormuras/run.duke' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Check out repository'
+        uses: actions/checkout@v3
+      - name: 'Download artifact ci-build-${{ env.DUKE_VERSION }}'
+        uses: actions/download-artifact@v3
+        with:
+          name: duke-ci-build-${{ env.DUKE_VERSION }}
+          path: .duke
+      - name: 'Update Early-Access Release'
+        uses: jreleaser/release-action@v2
+        env:
+          JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JRELEASER_OVERWRITE: true
+          JRELEASER_PROJECT_VERSION: ${{ env.DUKE_VERSION }}
+        with:
+          version: early-access

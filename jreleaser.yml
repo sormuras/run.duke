@@ -1,0 +1,14 @@
+project:
+  name: run.duke
+  versionPattern: java-module
+  snapshot:
+    pattern: .*-ea+.*
+
+release:
+  github:
+    tagName: '{{projectVersion}}'
+    releaseName: 'Duke {{projectEffectiveVersion}}'
+
+files:
+  artifacts:
+    - path: '.duke/lib/run.duke@{{projectEffectiveVersion}}.jar'
