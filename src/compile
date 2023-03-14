@@ -1,7 +1,0 @@
-#
-# Usage: javac @src/compile
-#
-
--d .duke/lib
---module-source-path run.duke=src/run.duke/main/java
---module run.duke
