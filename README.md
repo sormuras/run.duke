@@ -1,2 +1,3 @@
-# run.duke
+# Duke
+
 Tools and tasks

@@ -24,18 +24,16 @@ jobs:
         with:
           distribution: 'oracle'
           java-version: 17
-      - name: 'Build module run.duke@${{ env.DUKE_VERSION }}'
-        run: java src/duke.run/Build.java
-      - name: 'Describe module run.duke'
-        run: java --module-path .duke/lib --describe-module run.duke
+      - name: 'Bootstrap Duke from sources'
+        run: java src/duke.run/Duke.java /boot
       - name: 'Launch Duke''s main program'
         run: java @duke --version
-      - name: 'Upload artifact ci-build-${{ env.DUKE_VERSION }}'
+      - name: 'Upload build artifact'
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: duke-ci-build-${{ env.DUKE_VERSION }}
-          path: .duke
+          name: duke-early-access-modules-${{ env.DUKE_VERSION }}
+          path: .duke/modules
 
   update-early-access-release:
     needs: [ build ]
@@ -44,11 +42,11 @@ jobs:
     steps:
       - name: 'Check out repository'
         uses: actions/checkout@v3
-      - name: 'Download artifact ci-build-${{ env.DUKE_VERSION }}'
+      - name: 'Download build artifact'
         uses: actions/download-artifact@v3
         with:
-          name: duke-ci-build-${{ env.DUKE_VERSION }}
-          path: .duke
+          name: duke-early-access-modules-${{ env.DUKE_VERSION }}
+          path: .duke/modules
       - name: 'Update Early-Access Release'
         uses: jreleaser/release-action@v2
         env:
