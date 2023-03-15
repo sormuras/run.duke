@@ -1,4 +1,4 @@
-package run.duke;
+package run.duke.internal;
 
 import java.lang.module.ModuleFinder;
 import java.nio.file.Files;
@@ -6,15 +6,16 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.spi.ToolProvider;
+import run.duke.Folders;
 
-record WorkbenchLayerBuilder(Path source, Path classes, Path modules, List<String> roots) {
-  static WorkbenchLayerBuilder of(Folders folders) {
+public record Workbench(Path source, Path classes, Path modules, List<String> roots) {
+  public static Workbench of(Folders folders) {
     var version = Runtime.version();
     var sources = folders.workbench();
     var classes = folders.cache("workbench", "classes-" + version.feature());
     var modules = folders.modules();
     var roots = computeModuleCompilationUnits(sources);
-    return new WorkbenchLayerBuilder(sources, classes, modules, roots);
+    return new Workbench(sources, classes, modules, roots);
   }
 
   static List<String> computeModuleCompilationUnits(Path root) {
@@ -31,11 +32,11 @@ record WorkbenchLayerBuilder(Path source, Path classes, Path modules, List<Strin
     return List.copyOf(roots);
   }
 
-  ModuleLayer buildModuleLayer() {
-    return buildModuleLayer(ModuleLayer.boot(), ClassLoader.getSystemClassLoader());
+  public ModuleLayer newModuleLayer() {
+    return newModuleLayer(ModuleLayer.boot(), ClassLoader.getSystemClassLoader());
   }
 
-  ModuleLayer buildModuleLayer(ModuleLayer parentLayer, ClassLoader parentLoader) {
+  public ModuleLayer newModuleLayer(ModuleLayer parentLayer, ClassLoader parentLoader) {
     if (!roots.isEmpty()) {
       var javac = ToolProvider.findFirst("javac").orElseThrow();
       var code =
