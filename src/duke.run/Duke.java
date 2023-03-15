@@ -23,7 +23,7 @@ sealed interface Duke {
     var operation = arguments.isEmpty() ? "/status" : arguments.removeFirst();
     var remaining = arguments.toArray(String[]::new);
     switch (operation) {
-      case "/boot" -> Mascot.getInstance().bootstrapDukeFromSources();
+      case "/bootstrap" -> Mascot.getInstance().bootstrapDukeFromSources();
       case "/grab" -> Duke.grab(arguments.removeFirst());
       case "/init" -> Duke.init(arguments.removeFirst());
       case "/run" -> Duke.run(remaining);
@@ -130,7 +130,7 @@ sealed interface Duke {
     void initializeDuke(String version) {
       out.println("Initializing Duke " + version);
       try {
-        var download = "https://github.com/sormuras/duke/releases/download";
+        var download = "https://github.com/sormuras/run.duke/releases/download";
         var archive = "run.duke@" + version + ".jar";
         downloadModuleFromRemoteLocation(download + "/" + version + "/" + archive);
         initializeDukeCommandLineArgumentFile();
