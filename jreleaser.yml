@@ -1,5 +1,5 @@
 project:
-  name: run.duke
+  name: Duke
   versionPattern: java-module
   snapshot:
     pattern: .*-ea+.*
@@ -11,4 +11,4 @@ release:
 
 files:
   artifacts:
-    - path: '.duke/lib/run.duke@{{projectEffectiveVersion}}.jar'
+    - path: '.duke/modules/*.jar'

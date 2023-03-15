@@ -6,5 +6,5 @@
 # --show-module-resolution
 # -XX:StartFlightRecording:filename=.duke/recording.jfr,dumponexit=true
 
---module-path .duke/lib
+--module-path .duke/modules
 --module run.duke/run.duke.Main
