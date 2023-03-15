@@ -1,8 +1,8 @@
 project:
   name: Duke
-  versionPattern: java-module
+  versionPattern: JAVA-MODULE
   snapshot:
-    pattern: .*-ea+.*
+    pattern: .*-ea.*
 
 release:
   github:
@@ -10,5 +10,5 @@ release:
     releaseName: 'Duke {{projectEffectiveVersion}}'
 
 files:
-  artifacts:
-    - path: '.duke/modules/*.jar'
+  globs:
+    - pattern: .duke/modules/*.jar
