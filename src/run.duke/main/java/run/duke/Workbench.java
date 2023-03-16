@@ -1,4 +1,4 @@
-package run.duke.internal;
+package run.duke;
 
 import java.lang.module.ModuleFinder;
 import java.nio.file.Files;
@@ -6,19 +6,26 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.spi.ToolProvider;
-import run.duke.Folders;
 
-public record Workbench(Path source, Path classes, Path modules, List<String> roots) {
+public record Workbench(Folders folders, ModuleLayer layer, List<String> roots) {
   public static Workbench of(Folders folders) {
     var version = Runtime.version();
     var sources = folders.workbench();
     var classes = folders.cache("workbench", "classes-" + version.feature());
     var modules = folders.modules();
-    var roots = computeModuleCompilationUnits(sources);
-    return new Workbench(sources, classes, modules, roots);
+    var roots = computeModuleCompilationUnitNames(sources);
+    var layer =
+        compileModuleLayer(
+            roots,
+            sources,
+            modules,
+            classes,
+            ModuleLayer.boot(),
+            ClassLoader.getSystemClassLoader());
+    return new Workbench(folders, layer, roots);
   }
 
-  static List<String> computeModuleCompilationUnits(Path root) {
+  static List<String> computeModuleCompilationUnitNames(Path root) {
     if (Files.notExists(root)) return List.of();
     var roots = new TreeSet<String>();
     try (var directories = Files.newDirectoryStream(root, Files::isDirectory)) {
@@ -32,11 +39,13 @@ public record Workbench(Path source, Path classes, Path modules, List<String> ro
     return List.copyOf(roots);
   }
 
-  public ModuleLayer newModuleLayer() {
-    return newModuleLayer(ModuleLayer.boot(), ClassLoader.getSystemClassLoader());
-  }
-
-  public ModuleLayer newModuleLayer(ModuleLayer parentLayer, ClassLoader parentLoader) {
+  static ModuleLayer compileModuleLayer(
+      List<String> roots,
+      Path sources,
+      Path modules,
+      Path classes,
+      ModuleLayer parentLayer,
+      ClassLoader parentLoader) {
     if (!roots.isEmpty()) {
       var javac = ToolProvider.findFirst("javac").orElseThrow();
       var code =
@@ -44,7 +53,7 @@ public record Workbench(Path source, Path classes, Path modules, List<String> ro
               System.out,
               System.err,
               "--module=" + String.join(",", roots),
-              "--module-source-path=" + source,
+              "--module-source-path=" + sources,
               "--module-path=" + modules,
               "-d",
               classes.toString());

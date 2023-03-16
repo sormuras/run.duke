@@ -1,6 +1,10 @@
 package run.duke.internal;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.ServiceLoader;
+import java.util.function.Predicate;
+import java.util.spi.ToolProvider;
 import run.duke.Tool;
 import run.duke.ToolFinder;
 
@@ -12,13 +16,23 @@ public final class Finders {
   }
 
   public static ToolFinder of(List<Tool> tools) {
-      if (tools.isEmpty()) return EMPTY_TOOL_FINDER;
-      return new DefaultToolFinder(List.copyOf(tools));
+    if (tools.isEmpty()) return EMPTY_TOOL_FINDER;
+    return new DefaultToolFinder(List.copyOf(tools));
+  }
+
+  public static ToolFinder of(ServiceLoader<ToolProvider> providers, Predicate<Module> include) {
+    var tools = new ArrayList<Tool>();
+    providers.stream()
+        .filter(provider -> include.test(provider.type().getModule()))
+        .map(ServiceLoader.Provider::get)
+        .map(Tool::of)
+        .forEach(tools::add);
+    return Finders.of(tools);
   }
 
   public static ToolFinder compose(ToolFinder... finders) {
     if (finders.length == 0) return EMPTY_TOOL_FINDER;
-    return compose(List.of(finders));
+    return Finders.compose(List.of(finders));
   }
 
   public static ToolFinder compose(List<ToolFinder> finders) {

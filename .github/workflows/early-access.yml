@@ -24,9 +24,9 @@ jobs:
         with:
           distribution: 'oracle'
           java-version: 17
-      - name: 'Bootstrap Duke from sources'
-        run: java src/duke.run/Duke.java /bootstrap
-      - name: 'Launch Duke''s main program'
+      - name: 'Bootstrap from sources'
+        run: java @bootstrap
+      - name: 'Launch main program'
         run: java @duke versions
       - name: 'Upload build artifact'
         if: always()

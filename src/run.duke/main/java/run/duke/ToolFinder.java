@@ -2,12 +2,18 @@ package run.duke;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.ServiceLoader;
+import java.util.spi.ToolProvider;
 import run.duke.internal.Finders;
 
 @FunctionalInterface
 public interface ToolFinder {
   static ToolFinder of(Tool... tools) {
     return Finders.of(tools);
+  }
+
+  static ToolFinder of(ModuleLayer layer) {
+    return Finders.of(ServiceLoader.load(layer, ToolProvider.class), __ -> true);
   }
 
   static ToolFinder compose(ToolFinder... finders) {

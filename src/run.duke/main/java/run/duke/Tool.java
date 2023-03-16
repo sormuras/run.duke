@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.spi.ToolProvider;
 import run.duke.internal.Tools;
 
-public sealed interface Tool extends Comparable<Tool>, ToolFinder permits ToolOperator, Tools.DefaultTool {
+public sealed interface Tool extends ToolFinder permits ToolOperator, Tools.DefaultTool {
   static Tool of(ToolProvider provider) {
     return Tools.of(namespace(provider), provider.name(), provider);
   }
@@ -34,12 +34,6 @@ public sealed interface Tool extends Comparable<Tool>, ToolFinder permits ToolOp
   ToolProvider provider();
 
   @Override
-  default int compareTo(Tool other) {
-    var namespace = namespace().compareTo(other.namespace());
-    if (namespace != 0) return namespace;
-    return name().compareTo(name());
-  }
-
   default List<Tool> tools() {
     return List.of(this);
   }

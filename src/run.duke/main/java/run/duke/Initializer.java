@@ -5,15 +5,17 @@ import run.duke.internal.DefaultInitializer;
 
 @FunctionalInterface
 public interface Initializer {
+  record Configuration(Workbench workbench) {}
+
   ToolRunner newToolRunner(Configuration configuration);
 
-  default ToolRunner newToolRunner(Folders folders, Printer printer) {
-    var configuration = new Configuration(folders, printer);
+  default ToolRunner newToolRunner(Workbench workbench) {
+    var configuration = new Configuration(workbench);
     return newToolRunner(configuration);
   }
 
-  static Initializer of(ModuleLayer layer) {
-    var services = ServiceLoader.load(layer, Initializer.class).stream().toList();
+  static Initializer of(Workbench workbench) {
+    var services = ServiceLoader.load(workbench.layer(), Initializer.class).stream().toList();
     var size = services.size();
     var name = System.getProperty("-Duke-initializer".substring(2), null);
     if (size == 0) {
@@ -41,6 +43,4 @@ public interface Initializer {
     }
     throw new AssertionError("Initializer not found: " + name);
   }
-
-  record Configuration(Folders folders, Printer printer) {}
 }

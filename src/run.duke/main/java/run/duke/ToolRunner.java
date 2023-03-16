@@ -2,6 +2,7 @@ package run.duke;
 
 import run.duke.internal.DefaultToolRunner;
 
+import java.util.StringJoiner;
 import java.util.stream.Stream;
 
 public interface ToolRunner {
@@ -24,7 +25,11 @@ public interface ToolRunner {
   default void run(ToolCall call) {
     var tool = call.tool();
     var found = finder().find(tool);
-    if (found.isEmpty()) throw new IllegalArgumentException("Tool not found: " + tool);
+    if (found.isEmpty()) {
+      var message = new StringJoiner("\n| ").add("Tool not found: " + tool);
+      finder().tools().stream().map(Tool::toNamespaceAndName).sorted().forEach(message::add);
+      throw new IllegalArgumentException(message.toString());
+    }
     run(found.get(), call);
   }
 
