@@ -39,8 +39,7 @@ jobs:
     needs: [ build ]
     if: github.event_name == 'push' && github.repository == 'sormuras/run.duke' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
+    permissions: write-all
     steps:
       - name: 'Check out repository'
         uses: actions/checkout@v3
