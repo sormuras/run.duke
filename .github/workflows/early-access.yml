@@ -42,11 +42,18 @@ jobs:
     steps:
       - name: 'Check out repository'
         uses: actions/checkout@v3
+      - name: 'Set up Java Development Kit'
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'oracle'
+          java-version: 17
       - name: 'Download build artifact'
         uses: actions/download-artifact@v3
         with:
           name: duke-early-access-modules-${{ env.DUKE_VERSION }}
           path: .duke/modules
+      - name: 'Sign single JAR file'
+        run: java -Dsign=true src/duke.run/Sigstore.java .duke/modules/run.duke@early-access.jar
       - name: 'Update Early-Access Release'
         uses: jreleaser/release-action@v2
         env:
