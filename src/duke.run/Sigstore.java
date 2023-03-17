@@ -39,6 +39,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
+/**
+ * Single-file Source-code Sigstore-support.
+ *
+ * <p>Sign: {@code java -Dsign Sigstore.java a.jar b.jar ...}
+ *
+ * <p>Verify: {@code java -Dverify -Dtrust-email=jim@abc.org,... Sigstore.java a.jar b.jar ...}
+ */
 public class Sigstore {
   public static void main(String... args) throws Exception {
     if (Boolean.getBoolean("sign")) sign(args);
@@ -375,7 +382,8 @@ public class Sigstore {
                 base64.encodeToString(certificate));
 
     var request = HttpRequest.newBuilder().uri(new URI(REKOR + "/api/v1/log/entries"));
-    request.header("Accept", "application/json")
+    request
+        .header("Accept", "application/json")
         .header("Content-Type", "application/json")
         .method("POST", BodyPublishers.ofString(payload));
     var response = HTTP.send(request.build(), BodyHandlers.ofString());
@@ -387,7 +395,8 @@ public class Sigstore {
 
   private static String searchRekor(String query) throws Exception {
     var request = HttpRequest.newBuilder().uri(new URI(REKOR + "/api/v1/index/retrieve"));
-    request.header("Accept", "application/json")
+    request
+        .header("Accept", "application/json")
         .header("Content-Type", "application/json")
         .method("POST", BodyPublishers.ofString(query));
     var response = HTTP.send(request.build(), BodyHandlers.ofString());
