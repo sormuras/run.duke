@@ -1,2 +1,4 @@
 /** Defines the Java Tooling APIs. */
-module run.duke {}
+module run.duke {
+  exports run.duke.api;
+}
