@@ -1,9 +1,17 @@
 package run.duke;
 
-/** Main entry-point running a sequence of tool calls. */
-public class Main {
+import java.util.spi.ToolProvider;
+
+/** Duke's entry-point program running a sequence of tool calls. */
+class Main {
   public static void main(String... args) {
-    System.out.println("Running " + Main.class.getModule() + " " + String.join(" ", args));
-    System.exit(0);
+    var duke = ToolProvider.findFirst("duke");
+    if (duke.isEmpty()) {
+      System.err.println("Tool 'duke' not found");
+      System.exit(-1);
+    }
+    System.out.printf("| duke %s%n", String.join(" ", args));
+    var code = duke.get().run(System.out, System.err, args);
+    System.exit(code);
   }
 }
