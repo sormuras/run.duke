@@ -1,17 +1,12 @@
 package run.duke;
 
 import java.io.PrintWriter;
-import java.util.function.Predicate;
+import java.util.List;
 import java.util.spi.ToolProvider;
 
-/** Represents a runnable tool descriptor. */
-@FunctionalInterface
-public interface Tool extends Comparable<Tool>, Predicate<String> {
-  static Tool of(ToolProvider provider) {
-    var namespace = computeNamespace(provider);
-    var name = provider.name();
-    return new ProvidedTool(namespace, name, provider);
-  }
+/** Represents a tool descriptor. */
+public sealed interface Tool extends ToolFinder permits Tool.ProvidedTool, ToolOperator {
+  ToolProvider provider();
 
   default String namespace() {
     return computeNamespace(provider());
@@ -19,15 +14,6 @@ public interface Tool extends Comparable<Tool>, Predicate<String> {
 
   default String name() {
     return provider().name();
-  }
-
-  ToolProvider provider();
-
-  @Override
-  default int compareTo(Tool other) {
-    var comparison = namespace().compareTo(other.namespace());
-    if (comparison != 0) return comparison;
-    return name().compareTo(other.name());
   }
 
   default int run(String... args) {
@@ -47,12 +33,24 @@ public interface Tool extends Comparable<Tool>, Predicate<String> {
   }
 
   @Override
-  default boolean test(String string) {
-    return name().equals(string) || toNamespaceAndName().equals(string);
+  default List<Tool> tools() {
+    return List.of(this);
   }
 
   default String toNamespaceAndName() {
     return namespace().isEmpty() ? name() : namespace() + '/' + name();
+  }
+
+  static Tool of(String name) throws ToolNotFoundException {
+    var found = ToolProvider.findFirst(name);
+    if (found.isEmpty()) throw new ToolNotFoundException(name);
+    return Tool.of(found.get());
+  }
+
+  static Tool of(ToolProvider provider) {
+    var namespace = computeNamespace(provider);
+    var name = provider.name();
+    return new ProvidedTool(namespace, name, provider);
   }
 
   private static String computeNamespace(Object object) {
