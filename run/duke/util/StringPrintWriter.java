@@ -1,4 +1,4 @@
-package run.duke.main;
+package run.duke.util;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

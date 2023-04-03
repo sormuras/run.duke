@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 import run.duke.main.DukeContext;
 import run.duke.main.DukeEvents;
 import run.duke.main.DukeFolders;
-import run.duke.main.StringPrintWriter;
+import run.duke.util.StringPrintWriter;
 
 /** A runner of tools. */
 public final class ToolRunner {

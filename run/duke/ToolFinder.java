@@ -7,6 +7,9 @@ import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.function.Predicate;
 import java.util.spi.ToolProvider;
+import run.duke.util.ArrayToolFinder;
+import run.duke.util.CompositeToolFinder;
+import run.duke.util.EmptyToolFinder;
 
 /** Represents an ordered and searchable collection of tool descriptors. */
 public interface ToolFinder {
@@ -49,11 +52,11 @@ public interface ToolFinder {
   static ToolFinder of(ServiceLoader<ToolProvider> providers, Predicate<Module> include) {
     var tools = new ArrayList<Tool>();
     providers.stream()
-            .filter(provider -> include.test(provider.type().getModule()))
-            .map(ServiceLoader.Provider::get)
-            .map(Tool::of)
-            .sorted(Comparator.comparing(Tool::namespace).thenComparing(Tool::name))
-            .forEach(tools::add);
+        .filter(provider -> include.test(provider.type().getModule()))
+        .map(ServiceLoader.Provider::get)
+        .map(Tool::of)
+        .sorted(Comparator.comparing(Tool::namespace).thenComparing(Tool::name))
+        .forEach(tools::add);
     return ToolFinder.of(tools);
   }
 
@@ -65,22 +68,5 @@ public interface ToolFinder {
 
   static ToolFinder empty() {
     return EmptyToolFinder.INSTANCE;
-  }
-
-  record ArrayToolFinder(List<Tool> tools) implements ToolFinder {}
-
-  record CompositeToolFinder(List<ToolFinder> finders) implements ToolFinder {
-    @Override
-    public List<Tool> tools() {
-      return finders.stream().flatMap(finder -> finder.tools().stream()).toList();
-    }
-  }
-
-  record EmptyToolFinder() implements ToolFinder {
-    static final ToolFinder INSTANCE = new EmptyToolFinder();
-    @Override
-    public List<Tool> tools() {
-      return List.of();
-    }
   }
 }

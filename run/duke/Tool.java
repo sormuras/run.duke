@@ -3,9 +3,10 @@ package run.duke;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.spi.ToolProvider;
+import run.duke.util.ProvidedTool;
 
 /** Represents a tool descriptor. */
-public sealed interface Tool extends ToolFinder permits Tool.ProvidedTool, ToolOperator {
+public sealed interface Tool extends ToolFinder permits ProvidedTool, ToolOperator {
   ToolProvider provider();
 
   default String namespace() {
@@ -58,6 +59,4 @@ public sealed interface Tool extends ToolFinder permits Tool.ProvidedTool, ToolO
     var module = type.getModule();
     return module.isNamed() ? module.getName() : type.getPackageName();
   }
-
-  record ProvidedTool(String namespace, String name, ToolProvider provider) implements Tool {}
 }
