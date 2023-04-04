@@ -7,6 +7,7 @@ module run.duke {
   requires jdk.jfr;
 
   uses java.util.spi.ToolProvider;
+  uses run.duke.Configurator;
 
   provides java.util.spi.ToolProvider with
       run.duke.main.DukeToolProvider;

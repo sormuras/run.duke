@@ -12,6 +12,10 @@ import run.duke.util.StringPrintWriter;
 /** A runner of tools. */
 public final class ToolRunner {
   public static ToolRunner of(ToolFinder finder, Record... values) {
+    return ToolRunner.of(finder, ToolPrinter.ofSystem(), values);
+  }
+
+  public static ToolRunner of(ToolFinder finder, ToolPrinter printer, Record... values) {
     var map = new TreeMap<String, Record>();
     for (var value : values) {
       var key = value.getClass().getName();
@@ -19,15 +23,10 @@ public final class ToolRunner {
       if (old == null) continue;
       throw new IllegalArgumentException("Duplicate value type detected: " + key);
     }
-    var tmp = new ToolRunner(map);
-    var context =
-        new DukeContext(
-            finder,
-            tmp.value(DukeFolders.class, DukeFolders::ofCurrentWorkingDirectory),
-            tmp.value(ToolPrinter.class, ToolPrinter::ofSystem));
-    var key = DukeContext.class.getName();
-    map.put(key, context);
-    return new ToolRunner(map);
+    var runner = new ToolRunner(map);
+    var folders = runner.value(DukeFolders.class, DukeFolders::ofCurrentWorkingDirectory);
+    var context = new DukeContext(finder, printer, folders);
+    return runner.with(context);
   }
 
   private final Map<String, Record> values;
@@ -36,12 +35,27 @@ public final class ToolRunner {
     this.values = values;
   }
 
+  private ToolRunner with(DukeContext context) {
+    var map = new TreeMap<>(values);
+    var key = DukeContext.class.getName();
+    map.put(key, context);
+    return new ToolRunner(map);
+  }
+
+  public ToolRunner with(ToolFinder finder) {
+    return with(context().with(finder));
+  }
+
+  private DukeContext context() {
+    return value(DukeContext.class);
+  }
+
   public ToolFinder finder() {
-    return value(DukeContext.class).finder();
+    return context().finder();
   }
 
   public ToolPrinter printer() {
-    return value(DukeContext.class).printer();
+    return context().printer();
   }
 
   public void run(String tool, String... arguments) {
@@ -75,6 +89,7 @@ public final class ToolRunner {
     var name = tool.name();
     var args = arguments.toArray();
     var event = DukeEvents.beginToolRunEvent(name, args);
+    printer.debug("| " + event.name + " " + event.args);
     try {
       var out = new StringPrintWriter(printer.out());
       var err = new StringPrintWriter(printer.err());

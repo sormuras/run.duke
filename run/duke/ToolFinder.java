@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.function.Predicate;
 import java.util.spi.ToolProvider;
+import java.util.stream.Stream;
 import run.duke.util.ArrayToolFinder;
 import run.duke.util.CompositeToolFinder;
 import run.duke.util.EmptyToolFinder;
@@ -31,6 +32,10 @@ public interface ToolFinder {
 
   private static boolean matches(String name, String string) {
     return name.equals(string) || name.startsWith(string + '@');
+  }
+
+  static ToolFinder of(String... tools) {
+    return ToolFinder.of(Stream.of(tools).map(Tool::of).toList());
   }
 
   static ToolFinder of(Tool... tools) {

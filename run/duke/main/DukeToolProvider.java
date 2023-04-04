@@ -1,8 +1,12 @@
 package run.duke.main;
 
 import java.io.PrintWriter;
+import java.lang.System.Logger.Level;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.spi.ToolProvider;
+import run.duke.Configurator;
+import run.duke.Tool;
 import run.duke.ToolCall;
 import run.duke.ToolFinder;
 import run.duke.ToolPrinter;
@@ -15,29 +19,71 @@ public record DukeToolProvider(String name) implements ToolProvider {
 
   @Override
   public int run(PrintWriter out, PrintWriter err, String... args) {
-    var printer = new ToolPrinter(out, err);
+    var verbose = is("-Duke.verbose") || is("-Debug");
+    var printer = ToolPrinter.of(out, err).withThreshold(verbose ? Level.DEBUG : Level.WARNING);
     var folders = DukeFolders.ofCurrentWorkingDirectory();
     var sources = DukeSources.of(folders);
-    var finder = ToolFinder.compose(ToolFinder.of(sources.layer()));
+    printer.debug(
+        """
+        Pre-configuration
+            printer = %s
+            folders = %s
+            sources = %s
+        """
+            .formatted(printer, folders, sources));
+
+    var boot = ToolRunner.of(ToolFinder.empty(), printer);
+    var configuration = Configurator.configure(sources.layer(), boot);
+    var runner = configuration.runner();
+    var finder = runner.finder();
+    printer.debug(
+        """
+        Configuration
+            runner = %s
+            finder = %s@%x
+        """
+            .formatted(
+                runner, finder.getClass().getCanonicalName(), System.identityHashCode(finder)));
 
     var tools = finder.tools();
     tools.stream().parallel().forEach(DukeEvents::commitToolConfigurationEvent);
+    printer.debug(toToolsMessage(tools));
 
     if (args.length == 0) {
       out.println("Usage: duke [options] <tool> [args...]");
       out.println();
-      out.println("Available options include:");
+      out.println("Options include:");
       out.println("    none (yet)");
-      out.println();
-      out.println("Available tools:");
-      for (var tool : tools) out.println(tool.toNamespaceAndName());
-      out.printf("    %d tool%s%n", tools.size(), tools.size() == 1 ? "" : "s");
+      if (!verbose) {
+        out.println();
+        out.println(toToolsMessage(tools));
+      }
       return 0;
     }
 
     var command = ToolCall.ofCommand(List.of(args));
-    var runner = ToolRunner.of(finder, folders, printer, command);
+    if (is("-Duke.dry-run") || is("-Dry-run")) {
+      if (verbose) {
+        out.println("| " + command.toCommandLine());
+        out.println("Dry-run ends here.");
+      }
+      return 0;
+    }
     runner.run(command);
     return 0;
+  }
+
+  static boolean is(String key) {
+    var name = key.startsWith("-D") ? key.substring(2) : key;
+    var value = System.getProperty(name, "false");
+    return value.isEmpty() || value.equalsIgnoreCase("true");
+  }
+
+  static String toToolsMessage(List<Tool> tools) {
+    var lines = new StringJoiner("\n");
+    lines.add("Tools");
+    for (var tool : tools) lines.add(tool.toNamespaceAndName());
+    lines.add("    %d tool%s%n".formatted(tools.size(), tools.size() == 1 ? "" : "s"));
+    return lines.toString();
   }
 }
