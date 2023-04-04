@@ -21,16 +21,28 @@ public interface Configurator {
   }
 
   static Configuration configure(ModuleLayer layer, ToolRunner runner) {
+    var printer = runner.printer();
     var configuration = new Configuration(layer, runner);
-    return Configurator.of(configuration).configure(configuration);
+    var configurator = Configurator.of(configuration);
+    printer.debug("Configurator " + configurator.getClass().getCanonicalName());
+    return configurator.configure(configuration);
   }
 
   static Configurator of(Configuration configuration) {
     var layer = configuration.layer();
-    var out = configuration.runner().printer().out();
+    var printer = configuration.runner().printer();
     var services = ServiceLoader.load(layer, Configurator.class).stream().toList();
     var size = services.size();
     var name = System.getProperty(SYSTEM_PROPERTY_KEY.substring(2), null);
+    {
+      printer.debug("Configurators");
+      services.stream()
+          .map(ServiceLoader.Provider::type)
+          .map(Class::getCanonicalName)
+          .sorted()
+          .forEach(printer::debug);
+      printer.debug(SYSTEM_PROPERTY_KEY + "=" + name);
+    }
 
     if (size == 0) { // no service loaded -> use default configurator implementation
       if (name == null) return new DukeConfigurator();
@@ -43,12 +55,13 @@ public interface Configurator {
     if (size == 1) { // one service loaded -> use it
       if (name == null) return first.get();
       if (name.equals(first.type().getCanonicalName())) return first.get();
+      if (name.equals(DukeConfigurator.class.getCanonicalName())) return new DukeConfigurator();
       throw new AssertionError("Duke configurator not found: " + name);
     }
 
     if (name == null) { // multiple services loaded and no name given -> select first
-      out.printf("Selected first Duke configurator service of type: %s`%n", first.type());
-      out.printf("Control selection via `java %s=<class-name>`%n", SYSTEM_PROPERTY_KEY);
+      printer.debug("Selected first Duke configurator service of type: " + first.type());
+      printer.debug("Control selection via `java " + SYSTEM_PROPERTY_KEY + "=<class-name>");
       return first.get();
     }
     for (var service : services) { // multiple services loaded and name given -> select matching one

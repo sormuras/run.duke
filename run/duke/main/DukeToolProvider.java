@@ -7,10 +7,10 @@ import java.util.StringJoiner;
 import java.util.spi.ToolProvider;
 import run.duke.Configurator;
 import run.duke.Tool;
-import run.duke.ToolCall;
 import run.duke.ToolFinder;
 import run.duke.ToolPrinter;
 import run.duke.ToolRunner;
+import run.duke.util.Task;
 
 public record DukeToolProvider(String name) implements ToolProvider {
   public DukeToolProvider() {
@@ -61,15 +61,16 @@ public record DukeToolProvider(String name) implements ToolProvider {
       return 0;
     }
 
-    var command = ToolCall.ofCommand(List.of(args));
+    var task = Task.of("run.duke", "<main>", args);
+    var size = task.calls().size();
+    printer.debug("Run %d main tool call%s...%n".formatted(size, size == 1 ? "" : "s"));
     if (is("-Duke.dry-run") || is("-Dry-run")) {
-      if (verbose) {
-        out.println("| " + command.toCommandLine());
-        out.println("Dry-run ends here.");
-      }
+      printer.debug("Dry-run activated. END OF LINE.");
       return 0;
     }
-    runner.run(command);
+    for (var call : task.calls()) {
+      runner.run(call);
+    }
     return 0;
   }
 

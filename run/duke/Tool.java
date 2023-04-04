@@ -3,7 +3,9 @@ package run.duke;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.spi.ToolProvider;
+import java.util.stream.Stream;
 import run.duke.util.ProvidedTool;
+import run.duke.util.Task;
 
 /** Represents a tool descriptor. */
 public sealed interface Tool extends ToolFinder permits ProvidedTool, ToolOperator {
@@ -52,6 +54,11 @@ public sealed interface Tool extends ToolFinder permits ProvidedTool, ToolOperat
     var namespace = computeNamespace(provider);
     var name = provider.name();
     return new ProvidedTool(namespace, name, provider);
+  }
+
+  static Tool of(String namespace, String name, ToolCall first, ToolCall... more) {
+    if (more.length == 0) return new Task(namespace, name, List.of(first));
+    return new Task(namespace, name, Stream.concat(Stream.of(first), Stream.of(more)).toList());
   }
 
   private static String computeNamespace(Object object) {
