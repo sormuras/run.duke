@@ -10,16 +10,6 @@ public interface Configurator {
 
   Configuration configure(Configuration configuration);
 
-  record Configuration(ModuleLayer layer, ToolRunner runner) {
-    public Configuration with(ToolRunner runner) {
-      return new Configuration(layer, runner);
-    }
-
-    public Configuration with(ToolFinder finder) {
-      return with(runner.with(finder));
-    }
-  }
-
   static Configuration configure(ModuleLayer layer, ToolRunner runner) {
     var printer = runner.printer();
     var configuration = new Configuration(layer, runner);

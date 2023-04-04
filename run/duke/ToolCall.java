@@ -110,24 +110,18 @@ public record ToolCall(String tool, List<String> arguments) {
     }
   }
 
-  public ToolCall withTweak(Tweak tweak) {
+  public ToolCall withTweak(ToolTweak tweak) {
     return tweak.tweak(this);
   }
 
-  public ToolCall withTweak(int position, Tweak tweak) {
+  public ToolCall withTweak(int position, ToolTweak tweak) {
     var call = new ToolCall(tool, List.of()).with(arguments.stream().limit(position));
     return tweak.tweak(call).with(arguments.stream().skip(position));
   }
 
-  public ToolCall withTweaks(Iterable<Tweak> tweaks) {
+  public ToolCall withTweaks(Iterable<ToolTweak> tweaks) {
     var tweaked = this;
     for (var tweak : tweaks) tweaked = tweak.tweak(tweaked);
     return tweaked;
-  }
-
-  /** Represents a unary operation on a tool call producing a new tool call with other arguments. */
-  @FunctionalInterface
-  public interface Tweak {
-    ToolCall tweak(ToolCall call);
   }
 }

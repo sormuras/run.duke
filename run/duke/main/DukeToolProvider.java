@@ -63,7 +63,7 @@ public record DukeToolProvider(String name) implements ToolProvider {
 
     var task = Task.of("run.duke", "<main>", args);
     var size = task.calls().size();
-    printer.debug("Run %d main tool call%s...%n".formatted(size, size == 1 ? "" : "s"));
+    printer.debug("Run %d main tool call%s...".formatted(size, size == 1 ? "" : "s"));
     if (is("-Duke.dry-run") || is("-Dry-run")) {
       printer.debug("Dry-run activated. END OF LINE.");
       return 0;

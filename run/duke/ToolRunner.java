@@ -62,7 +62,7 @@ public final class ToolRunner {
     run(ToolCall.of(tool).with(Stream.of(arguments)));
   }
 
-  public void run(String tool, ToolCall.Tweak arguments) {
+  public void run(String tool, ToolTweak arguments) {
     run(ToolCall.of(tool).withTweak(arguments));
   }
 
@@ -77,7 +77,7 @@ public final class ToolRunner {
     run(tool, ToolCall.of(tool.toNamespaceAndName()).with(Stream.of(arguments)));
   }
 
-  public void run(Tool tool, ToolCall.Tweak arguments) {
+  public void run(Tool tool, ToolTweak arguments) {
     run(tool, ToolCall.of(tool.toNamespaceAndName()).withTweak(arguments));
   }
 

@@ -1,5 +1,6 @@
 package run.duke.main;
 
+import run.duke.Configuration;
 import run.duke.Configurator;
 import run.duke.ToolFinder;
 
@@ -7,7 +8,7 @@ public record DukeConfigurator() implements Configurator {
   @Override
   public Configuration configure(Configuration configuration) {
     var layer = configuration.layer();
-    var finder = ToolFinder.compose(ToolFinder.of(layer));
+    var finder = ToolFinder.of(layer);
     return configuration.with(finder);
   }
 }
