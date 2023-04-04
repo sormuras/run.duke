@@ -1,6 +1,5 @@
 package run.duke;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -51,17 +50,28 @@ public interface ToolFinder {
   }
 
   static ToolFinder of(ModuleLayer layer) {
-    return ToolFinder.of(ServiceLoader.load(layer, ToolProvider.class), __ -> true);
+    return ToolFinder.compose(
+        ToolFinder.ofFinders(ServiceLoader.load(layer, ToolFinder.class), __ -> true),
+        ToolFinder.ofProviders(ServiceLoader.load(layer, ToolProvider.class), __ -> true));
   }
 
-  static ToolFinder of(ServiceLoader<ToolProvider> providers, Predicate<Module> include) {
-    var tools = new ArrayList<Tool>();
-    providers.stream()
-        .filter(provider -> include.test(provider.type().getModule()))
-        .map(ServiceLoader.Provider::get)
-        .map(Tool::of)
-        .sorted(Comparator.comparing(Tool::namespace).thenComparing(Tool::name))
-        .forEach(tools::add);
+  static ToolFinder ofFinders(ServiceLoader<ToolFinder> loader, Predicate<Module> include) {
+    var finders =
+        loader.stream()
+            .filter(provider -> include.test(provider.type().getModule()))
+            .map(ServiceLoader.Provider::get)
+            .toList();
+    return ToolFinder.compose(finders);
+  }
+
+  static ToolFinder ofProviders(ServiceLoader<ToolProvider> loader, Predicate<Module> include) {
+    var tools =
+        loader.stream()
+            .filter(provider -> include.test(provider.type().getModule()))
+            .map(ServiceLoader.Provider::get)
+            .map(Tool::of)
+            .sorted(Comparator.comparing(Tool::namespace).thenComparing(Tool::name))
+            .toList();
     return ToolFinder.of(tools);
   }
 
@@ -69,6 +79,12 @@ public interface ToolFinder {
     if (finders.length == 0) return empty();
     if (finders.length == 1) return finders[0];
     return new CompositeToolFinder(List.of(finders));
+  }
+
+  static ToolFinder compose(List<ToolFinder> finders) {
+    if (finders.isEmpty()) return empty();
+    if (finders.size() == 1) return finders.get(0);
+    return new CompositeToolFinder(List.copyOf(finders));
   }
 
   static ToolFinder empty() {
