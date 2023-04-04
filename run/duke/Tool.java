@@ -8,7 +8,7 @@ import run.duke.util.ProvidedTool;
 import run.duke.util.Task;
 
 /** Represents a tool descriptor. */
-public sealed interface Tool extends ToolFinder permits ProvidedTool, ToolOperator {
+public interface Tool extends ToolFinder {
   ToolProvider provider();
 
   default String namespace() {
@@ -52,8 +52,11 @@ public sealed interface Tool extends ToolFinder permits ProvidedTool, ToolOperat
 
   static Tool of(ToolProvider provider) {
     var namespace = computeNamespace(provider);
-    var name = provider.name();
-    return new ProvidedTool(namespace, name, provider);
+    return Tool.of(namespace, provider);
+  }
+
+  static Tool of(String namespace, ToolProvider provider) {
+    return new ProvidedTool(namespace, provider.name(), provider);
   }
 
   static Tool of(String namespace, String name, ToolCall first, ToolCall... more) {

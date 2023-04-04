@@ -1,6 +1,7 @@
 /** Defines Duke's Java Tooling API. */
 module run.duke {
   exports run.duke;
+  exports run.duke.menu;
 
   requires jdk.compiler;
   requires jdk.jartool;

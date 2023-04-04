@@ -4,7 +4,7 @@ import java.io.PrintWriter;
 import java.util.spi.ToolProvider;
 
 /** A tool provider extension capable of running other tools. */
-public non-sealed interface ToolOperator extends Tool, ToolProvider {
+public interface ToolOperator extends Tool, ToolProvider {
   @Override
   default String name() {
     return Tool.super.name();
