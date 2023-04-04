@@ -10,9 +10,10 @@ import java.util.spi.ToolProvider;
 /** Duke's initialization program. */
 class Init {
   public static void main(String... args) {
+    var verbose = is("-Duke.verbose") || is("-Debug");
     try {
       init();
-      out.println("Next command: java @duke <tool> <args...>");
+      if (verbose) out.println("Next command: java @duke <tool> <args...>");
       System.exit(0);
     } catch (Exception exception) {
       exception.printStackTrace(err);
@@ -28,7 +29,8 @@ class Init {
   }
 
   static int runToolProvider(ToolProvider tool, String... args) {
-    out.printf("| %s %s%n", tool.name(), String.join(" ", args));
+    var verbose = is("-Duke.verbose") || is("-Debug");
+    if (verbose) out.printf("| %s %s%n", tool.name(), String.join(" ", args));
     return tool.run(out, err, args);
   }
 
@@ -65,6 +67,12 @@ class Init {
 
   private static String init(String name, String defaultValue) {
     return System.getProperty(("-Duke.init." + name).substring(2), defaultValue);
+  }
+
+  private static boolean is(String key) {
+    var name = key.startsWith("-D") ? key.substring(2) : key;
+    var value = System.getProperty(name, "false");
+    return value.isEmpty() || value.equalsIgnoreCase("true");
   }
 
   private static final String ARG_FILE =
