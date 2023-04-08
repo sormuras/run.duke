@@ -7,9 +7,9 @@ import java.util.StringJoiner;
 import java.util.spi.ToolProvider;
 import jdk.tools.Tool;
 import jdk.tools.ToolFinder;
+import jdk.tools.ToolMenu;
 import jdk.tools.ToolOperator;
 import jdk.tools.ToolRunner;
-import run.duke.ToolMenu;
 
 public record FileMenu(String name, ToolFinder items) implements ToolMenu {
   public FileMenu() {
@@ -32,8 +32,8 @@ public record FileMenu(String name, ToolFinder items) implements ToolMenu {
     public int run(PrintWriter out, PrintWriter err, String... args) {
       var file = Path.of(args[0]);
       var algorithm = args.length > 1 ? args[1] : "SHA-256";
-      //var checksum = PathSupport.checksum(file, algorithm);
-      //out.println(checksum);
+      // var checksum = PathSupport.checksum(file, algorithm);
+      // out.println(checksum);
       return 0;
     }
   }
@@ -69,8 +69,8 @@ public record FileMenu(String name, ToolFinder items) implements ToolMenu {
     @Override
     public int run(ToolRunner runner, PrintWriter out, PrintWriter err, String... args) {
       var uri = URI.create(args[0]);
-      //var text = runner.workbench().browser().read(uri);
-      //out.println(text);
+      // var text = runner.workbench().browser().read(uri);
+      // out.println(text);
       return 0;
     }
   }

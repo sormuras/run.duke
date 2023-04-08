@@ -1,7 +1,6 @@
 package run.duke;
 
 import jdk.tools.ToolFinder;
-import run.duke.menu.DukeMenu;
 
 record DukeConfigurator() implements Configurator {
   @Override

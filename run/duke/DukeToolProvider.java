@@ -44,7 +44,6 @@ public record DukeToolProvider(String name) implements ToolProvider {
                 runner, finder.getClass().getCanonicalName(), System.identityHashCode(finder)));
 
     var tools = finder.tools();
-    tools.stream().parallel().forEach(DukeEvents::commitToolConfigurationEvent);
     printer.debug(toToolsMessage(tools));
 
     if (args.length == 0) {

@@ -3,9 +3,9 @@ package run.duke.menu;
 import java.io.PrintWriter;
 import jdk.tools.Tool;
 import jdk.tools.ToolFinder;
+import jdk.tools.ToolMenu;
 import jdk.tools.ToolOperator;
 import jdk.tools.ToolRunner;
-import run.duke.ToolMenu;
 
 public record ListMenu(String name, ToolFinder items) implements ToolMenu {
   public ListMenu() {

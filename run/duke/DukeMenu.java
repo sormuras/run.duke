@@ -1,7 +1,9 @@
-package run.duke.menu;
+package run.duke;
 
 import jdk.tools.ToolFinder;
-import run.duke.ToolMenu;
+import jdk.tools.ToolMenu;
+import run.duke.menu.FileMenu;
+import run.duke.menu.ListMenu;
 
 public record DukeMenu(String name, ToolFinder items) implements ToolMenu {
   public DukeMenu() {
