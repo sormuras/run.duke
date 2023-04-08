@@ -1,11 +1,10 @@
 package run.duke.menu;
 
 import java.io.PrintWriter;
-import java.util.spi.ToolProvider;
-import run.duke.Tool;
-import run.duke.ToolFinder;
-import run.duke.ToolOperator;
-import run.duke.ToolRunner;
+import jdk.tools.Tool;
+import jdk.tools.ToolFinder;
+import jdk.tools.ToolOperator;
+import jdk.tools.ToolRunner;
 import run.duke.ToolMenu;
 
 public record ListMenu(String name, ToolFinder items) implements ToolMenu {
@@ -19,13 +18,9 @@ public record ListMenu(String name, ToolFinder items) implements ToolMenu {
 
   record ListTools(String name) implements Tool, ToolOperator {
     @Override
-    public ToolProvider provider() {
-      return this;
-    }
-
-    @Override
     public int run(ToolRunner runner, PrintWriter out, PrintWriter err, String... args) {
-      runner.finder().tools().stream().map(Tool::name).sorted().forEach(out::println);
+      var tools = runner.context().finder().tools();
+      tools.stream().map(Tool::name).sorted().forEach(out::println);
       return 0;
     }
   }

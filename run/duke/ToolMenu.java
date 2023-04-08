@@ -3,6 +3,10 @@ package run.duke;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.spi.ToolProvider;
+import jdk.tools.Tool;
+import jdk.tools.ToolFinder;
+import jdk.tools.ToolOperator;
+import jdk.tools.ToolRunner;
 
 public interface ToolMenu extends Tool, ToolOperator {
   ToolFinder items();

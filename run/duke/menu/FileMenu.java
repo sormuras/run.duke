@@ -5,10 +5,10 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.StringJoiner;
 import java.util.spi.ToolProvider;
-import run.duke.Tool;
-import run.duke.ToolFinder;
-import run.duke.ToolOperator;
-import run.duke.ToolRunner;
+import jdk.tools.Tool;
+import jdk.tools.ToolFinder;
+import jdk.tools.ToolOperator;
+import jdk.tools.ToolRunner;
 import run.duke.ToolMenu;
 
 public record FileMenu(String name, ToolFinder items) implements ToolMenu {

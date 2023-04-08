@@ -1,16 +1,14 @@
-package run.duke.main;
+package run.duke;
 
 import java.io.PrintWriter;
 import java.lang.System.Logger.Level;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.spi.ToolProvider;
-import run.duke.Configurator;
-import run.duke.Tool;
-import run.duke.ToolFinder;
-import run.duke.ToolPrinter;
-import run.duke.ToolRunner;
-import run.duke.util.Task;
+import jdk.tools.Task;
+import jdk.tools.Tool;
+import jdk.tools.ToolFinder;
+import jdk.tools.ToolPrinter;
 
 public record DukeToolProvider(String name) implements ToolProvider {
   public DukeToolProvider() {
@@ -32,7 +30,7 @@ public record DukeToolProvider(String name) implements ToolProvider {
         """
             .formatted(printer, folders, sources));
 
-    var boot = ToolRunner.of(ToolFinder.empty(), printer);
+    var boot = DukeRunner.of(ToolFinder.compose(), printer);
     var configuration = Configurator.configure(sources.layer(), boot);
     var runner = configuration.runner();
     var finder = runner.finder();
@@ -62,14 +60,14 @@ public record DukeToolProvider(String name) implements ToolProvider {
     }
 
     var task = Task.of("run.duke", "<main>", args);
-    var size = task.calls().size();
+    var size = task.commands().size();
     printer.debug("Run %d main tool call%s...".formatted(size, size == 1 ? "" : "s"));
     if (is("-Duke.dry-run") || is("-Dry-run")) {
       printer.debug("Dry-run activated. END OF LINE.");
       return 0;
     }
-    for (var call : task.calls()) {
-      runner.run(call);
+    for (var command : task.commands()) {
+      runner.run(command);
     }
     return 0;
   }

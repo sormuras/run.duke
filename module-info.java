@@ -5,12 +5,12 @@ module run.duke {
 
   requires jdk.compiler;
   requires jdk.jartool;
-  requires jdk.jfr;
+  requires jdk.javadoc;
+  requires transitive jdk.tools;
 
   uses java.util.spi.ToolProvider;
   uses run.duke.Configurator;
-  uses run.duke.ToolFinder;
 
   provides java.util.spi.ToolProvider with
-      run.duke.main.DukeToolProvider;
+      run.duke.DukeToolProvider;
 }

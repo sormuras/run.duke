@@ -1,8 +1,10 @@
 package run.duke;
 
+import jdk.tools.ToolFinder;
+
 /** Duke's run-time settings. */
-public record Configuration(ModuleLayer layer, ToolRunner runner) {
-  public Configuration with(ToolRunner runner) {
+public record Configuration(ModuleLayer layer, DukeRunner runner) {
+  public Configuration with(DukeRunner runner) {
     return new Configuration(layer, runner);
   }
 

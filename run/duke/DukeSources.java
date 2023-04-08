@@ -1,4 +1,4 @@
-package run.duke.main;
+package run.duke;
 
 import java.lang.module.ModuleFinder;
 import java.net.URI;
@@ -8,11 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.TreeSet;
-import java.util.spi.ToolProvider;
-import run.duke.Tool;
-import run.duke.ToolCall;
+import jdk.tools.Command;
+import jdk.tools.Tool;
 
-public record DukeSources(ModuleLayer layer) {
+record DukeSources(ModuleLayer layer) {
   public static DukeSources of(DukeFolders folders) {
     var parentLayer = DukeSources.class.getModule().getLayer();
     var parentLoader = DukeSources.class.getClassLoader();
@@ -45,20 +44,16 @@ public record DukeSources(ModuleLayer layer) {
     var classes = folders.tmp("sources", "classes-" + version.feature());
     var modules = findModulesPath().orElseGet(folders::src);
 
-    var call =
-        ToolCall.of("javac")
+    var command =
+        Command.of("javac")
             .with("--module", String.join(",", roots))
             .with("--module-source-path", sources)
             .with("--module-path", modules)
             .with("-implicit:none")
             .with("-d", classes);
     // System.out.println(call.toCommandLine());
-    var javac = Tool.of(ToolProvider.findFirst(call.tool()).orElseThrow());
-    var code = javac.run(call.toArray());
-    if (code != 0) {
-      System.err.println(call.toCommandLine());
-      throw new RuntimeException("javac returned exit code: " + code);
-    }
+    var runner = DukeRunner.of(Tool.of("javac"));
+    runner.run(command);
 
     var beforeFinder = ModuleFinder.of(classes); // classes-N of this layer
     var afterFinder = ModuleFinder.of(modules); // library folder with "run.duke"

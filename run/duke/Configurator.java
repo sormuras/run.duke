@@ -1,7 +1,6 @@
 package run.duke;
 
 import java.util.ServiceLoader;
-import run.duke.main.DukeConfigurator;
 
 /** Duke's configuration service. */
 @FunctionalInterface
@@ -10,7 +9,7 @@ public interface Configurator {
 
   Configuration configure(Configuration configuration);
 
-  static Configuration configure(ModuleLayer layer, ToolRunner runner) {
+  static Configuration configure(ModuleLayer layer, DukeRunner runner) {
     var printer = runner.printer();
     var configuration = new Configuration(layer, runner);
     var configurator = Configurator.of(configuration);

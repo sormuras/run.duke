@@ -58,6 +58,14 @@ class Init {
         "-C",
         classesDirectory.resolve(module).toString(),
         ".");
+    runToolProvider(
+        "jar",
+        "--create",
+        "--file=" + archiveDirectory.resolve("jdk.tools.jar"),
+        "--module-version=" + version,
+        "-C",
+        classesDirectory.resolve("jdk.tools").toString(),
+        ".");
 
     var argumentFile = Path.of("duke");
     if (Files.notExists(argumentFile)) Files.writeString(argumentFile, ARG_FILE);
