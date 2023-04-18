@@ -44,7 +44,7 @@ class Init {
     var classesDirectory = Path.of(".duke", "tmp", "init", "classes-" + release);
     runToolProvider(
         "javac",
-        "--module=" + module,
+        "--module=jdk.tools,run.duke",
         "--module-source-path=" + moduleSourcePath,
         "--release=" + release,
         "-d",
