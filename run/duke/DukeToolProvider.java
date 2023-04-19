@@ -3,7 +3,9 @@ package run.duke;
 import java.io.PrintWriter;
 import java.lang.System.Logger.Level;
 import java.util.List;
+import java.util.ServiceLoader;
 import java.util.StringJoiner;
+import java.util.function.Predicate;
 import java.util.spi.ToolProvider;
 import jdk.tools.Task;
 import jdk.tools.Tool;
@@ -30,16 +32,15 @@ public record DukeToolProvider(String name) implements ToolProvider {
         """
             .formatted(printer, folders, sources));
 
-    var finder = ToolFinder.compose(ToolFinder.of(sources.layer()), new DukeMenu());
+    var finder = ToolFinder.compose(newToolFinder(sources, __ -> true), new DukeMenu());
     var runner = DukeRunner.of(finder, printer);
     printer.debug(
         """
-        Configuration
+        Duke
             runner = %s
-            finder = %s@%x
+            finder = %d
         """
-            .formatted(
-                runner, finder.getClass().getCanonicalName(), System.identityHashCode(finder)));
+            .formatted(runner, finder.tools().size()));
 
     var tools = finder.tools();
     printer.debug(toToolsMessage(tools));
@@ -58,7 +59,7 @@ public record DukeToolProvider(String name) implements ToolProvider {
 
     var task = Task.of("run.duke", "<main>", args);
     var size = task.commands().size();
-    printer.debug("Run %d main tool call%s...".formatted(size, size == 1 ? "" : "s"));
+    printer.debug("Run %d main command%s...".formatted(size, size == 1 ? "" : "s"));
     if (is("-Duke.dry-run") || is("-Dry-run")) {
       printer.debug("Dry-run activated. END OF LINE.");
       return 0;
@@ -81,5 +82,16 @@ public record DukeToolProvider(String name) implements ToolProvider {
     for (var tool : tools) lines.add(tool.toNamespaceAndName());
     lines.add("    %d tool%s%n".formatted(tools.size(), tools.size() == 1 ? "" : "s"));
     return lines.toString();
+  }
+
+  static ToolFinder newToolFinder(DukeSources sources, Predicate<Module> include) {
+    var layer = sources.layer();
+    var finderServiceLoader = ServiceLoader.load(layer, ToolFinder.class);
+    var providerServiceLoader = ServiceLoader.load(layer, ToolProvider.class);
+    return ToolFinder.compose(
+        Finders.newToolFinderOfTasks(layer, include),
+        Finders.newToolFinderOfInstallers(sources, include),
+        Finders.newToolFinderOfFinders(finderServiceLoader, include),
+        Finders.newToolFinderOfProviders(providerServiceLoader, include));
   }
 }

@@ -2,7 +2,7 @@ package run.duke;
 
 import java.nio.file.Path;
 
-public record DukeFolders(Path root, Path dot, Path bin, Path src, Path tmp) {
+public record DukeFolders(Path root, Path dot, Path bin, Path src, Path tmp, Path tools) {
   public static DukeFolders ofCurrentWorkingDirectory() {
     return DukeFolders.of(Path.of(""));
   }
@@ -12,7 +12,8 @@ public record DukeFolders(Path root, Path dot, Path bin, Path src, Path tmp) {
     var bin = dot.resolve("bin");
     var src = dot.resolve("src");
     var tmp = dot.resolve("tmp");
-    return new DukeFolders(root, dot, bin, src, tmp);
+    var tools = tmp.resolve("tools");
+    return new DukeFolders(root, dot, bin, src, tmp, tools);
   }
 
   public Path tmp(String first, String... more) {

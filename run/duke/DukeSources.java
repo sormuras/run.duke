@@ -11,15 +11,15 @@ import java.util.TreeSet;
 import jdk.tools.Command;
 import jdk.tools.Tool;
 
-record DukeSources(ModuleLayer layer) {
+record DukeSources(DukeFolders folders, ModuleLayer layer) {
   public static DukeSources of(DukeFolders folders) {
     var parentLayer = DukeSources.class.getModule().getLayer();
     var parentLoader = DukeSources.class.getClassLoader();
     var roots = new ArrayList<>(computeModuleCompilationUnitNames(folders.src()));
     roots.removeIf(name -> parentLayer.findModule(name).isPresent());
-    if (roots.isEmpty()) return new DukeSources(parentLayer);
+    if (roots.isEmpty()) return new DukeSources(folders, parentLayer);
     var moduleLayer = compileModuleLayer(folders, roots, parentLayer, parentLoader);
-    return new DukeSources(moduleLayer);
+    return new DukeSources(folders, moduleLayer);
   }
 
   static List<String> computeModuleCompilationUnitNames(Path modules) {

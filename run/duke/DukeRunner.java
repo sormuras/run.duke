@@ -48,14 +48,6 @@ public final class DukeRunner implements ToolRunner {
     return value(DukeContext.class);
   }
 
-  public ToolFinder finder() {
-    return context().finder();
-  }
-
-  public ToolPrinter printer() {
-    return context().printer();
-  }
-
   public <R extends Record> R value(Class<R> type) {
     return type.cast(values.get(type.getName()));
   }
