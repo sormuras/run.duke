@@ -51,7 +51,6 @@ record DukeSources(ModuleLayer layer) {
             .with("--module-path", modules)
             .with("-implicit:none")
             .with("-d", classes);
-    // System.out.println(call.toCommandLine());
     var runner = DukeRunner.of(Tool.of("javac"));
     runner.run(command);
 

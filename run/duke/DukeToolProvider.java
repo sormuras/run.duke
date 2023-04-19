@@ -23,17 +23,15 @@ public record DukeToolProvider(String name) implements ToolProvider {
     var sources = DukeSources.of(folders);
     printer.debug(
         """
-        Pre-configuration
+        Configuration
             printer = %s
             folders = %s
             sources = %s
         """
             .formatted(printer, folders, sources));
 
-    var boot = DukeRunner.of(ToolFinder.compose(), printer);
-    var configuration = Configurator.configure(sources.layer(), boot);
-    var runner = configuration.runner();
-    var finder = runner.finder();
+    var finder = ToolFinder.compose(ToolFinder.of(sources.layer()), new DukeMenu());
+    var runner = DukeRunner.of(finder, printer);
     printer.debug(
         """
         Configuration
