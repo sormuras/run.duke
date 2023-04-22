@@ -2,14 +2,15 @@ package run.duke;
 
 import java.io.PrintWriter;
 import java.lang.System.Logger.Level;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.StringJoiner;
-import java.util.function.Predicate;
 import java.util.spi.ToolProvider;
 import jdk.tools.Task;
 import jdk.tools.Tool;
 import jdk.tools.ToolFinder;
+import jdk.tools.ToolOperator;
 import jdk.tools.ToolPrinter;
 
 public record DukeToolProvider(String name) implements ToolProvider {
@@ -23,27 +24,54 @@ public record DukeToolProvider(String name) implements ToolProvider {
     var printer = ToolPrinter.of(out, err).withThreshold(verbose ? Level.DEBUG : Level.WARNING);
     var folders = DukeFolders.ofCurrentWorkingDirectory();
     var sources = DukeSources.of(folders);
-    printer.debug(
-        """
-        Configuration
-            printer = %s
-            folders = %s
-            sources = %s
-        """
-            .formatted(printer, folders, sources));
 
-    var finder = ToolFinder.compose(newToolFinder(sources, __ -> true), new DukeMenu());
+    var configuration = DukeConfiguration.of(printer, folders, sources);
+    printer.debug(configuration.toTextBlock());
+
+    printer.debug("Loading initializers...");
+    var initializerServiceLoader = ServiceLoader.load(sources.layer(), DukeInitializer.class);
+    var initializedFinders = new ArrayList<ToolFinder>();
+    try {
+      var helper = new DukeInitializer.Helper(configuration);
+      for (var initializer : initializerServiceLoader) {
+        var initializedFinder = initializer.initializeToolFinder(helper);
+        if (initializedFinder.tools().isEmpty()) continue;
+        initializedFinders.add(initializedFinder);
+      }
+    } catch (Exception exception) {
+      return ErrorCode.TOOL_INSTALLATION_ERROR.describe(err, exception);
+    }
+
+    printer.debug("Loading tool finders...");
+    var finderServiceLoader = ServiceLoader.load(sources.layer(), ToolFinder.class);
+
+    printer.debug("Loading tool providers...");
+    var providerServiceLoader = ServiceLoader.load(sources.layer(), ToolProvider.class);
+
+    var finder =
+        ToolFinder.compose(
+            ToolFinder.compose(initializedFinders),
+            Finders.newToolFinderOfFinders(finderServiceLoader, __ -> true),
+            Finders.newToolFinderOfProviders(providerServiceLoader, __ -> true),
+            new DukeMenu());
+
     var runner = DukeRunner.of(finder, printer);
-    printer.debug(
-        """
-        Duke
-            runner = %s
-            finder = %d
-        """
-            .formatted(runner, finder.tools().size()));
-
     var tools = finder.tools();
     printer.debug(toToolsMessage(tools));
+
+    var missingToolNames = new ArrayList<String>();
+    for (var tool : tools) {
+      var provider = tool.provider();
+      if (provider instanceof ToolOperator operator) {
+        for (var required : operator.requires()) {
+          if (finder.find(required).isPresent()) continue;
+          missingToolNames.add(required);
+        }
+      }
+    }
+    if (!missingToolNames.isEmpty()) {
+      return ErrorCode.REQUIRED_TOOL_NOT_PRESENT_ERROR.describe(err, missingToolNames.toString());
+    }
 
     if (args.length == 0) {
       out.println("Usage: duke [options] <tool> [args...]");
@@ -54,7 +82,7 @@ public record DukeToolProvider(String name) implements ToolProvider {
         out.println();
         out.println(toToolsMessage(tools));
       }
-      return 0;
+      return ErrorCode.zero();
     }
 
     var task = Task.of("run.duke", "<main>", args);
@@ -62,12 +90,12 @@ public record DukeToolProvider(String name) implements ToolProvider {
     printer.debug("Run %d main command%s...".formatted(size, size == 1 ? "" : "s"));
     if (is("-Duke.dry-run") || is("-Dry-run")) {
       printer.debug("Dry-run activated. END OF LINE.");
-      return 0;
+      return ErrorCode.zero();
     }
     for (var command : task.commands()) {
       runner.run(command);
     }
-    return 0;
+    return ErrorCode.zero();
   }
 
   static boolean is(String key) {
@@ -84,14 +112,23 @@ public record DukeToolProvider(String name) implements ToolProvider {
     return lines.toString();
   }
 
-  static ToolFinder newToolFinder(DukeSources sources, Predicate<Module> include) {
-    var layer = sources.layer();
-    var finderServiceLoader = ServiceLoader.load(layer, ToolFinder.class);
-    var providerServiceLoader = ServiceLoader.load(layer, ToolProvider.class);
-    return ToolFinder.compose(
-        Finders.newToolFinderOfTasks(layer, include),
-        Finders.newToolFinderOfInstallers(sources, include),
-        Finders.newToolFinderOfFinders(finderServiceLoader, include),
-        Finders.newToolFinderOfProviders(providerServiceLoader, include));
+  enum ErrorCode {
+    ZERO,
+    TOOL_INSTALLATION_ERROR,
+    REQUIRED_TOOL_NOT_PRESENT_ERROR;
+
+    static int zero() {
+      return ZERO.ordinal();
+    }
+
+    int describe(PrintWriter writer, Throwable throwable) {
+      throwable.printStackTrace(writer);
+      return ordinal();
+    }
+
+    int describe(PrintWriter writer, String message) {
+      writer.println(message);
+      return ordinal();
+    }
   }
 }

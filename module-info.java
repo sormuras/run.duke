@@ -1,3 +1,5 @@
+import run.duke.DukeInitializer;
+
 /** Defines Duke's Java Tooling API. */
 module run.duke {
   exports run.duke;
@@ -10,6 +12,7 @@ module run.duke {
   uses java.util.spi.ToolProvider;
   uses jdk.tools.ToolFinder; // Tool, ToolOperator, Task, ...
   uses jdk.tools.ToolInstaller;
+  uses DukeInitializer;
 
   provides java.util.spi.ToolProvider with
       run.duke.DukeToolProvider;

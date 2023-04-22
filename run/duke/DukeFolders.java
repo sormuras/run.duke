@@ -19,4 +19,8 @@ public record DukeFolders(Path root, Path dot, Path bin, Path src, Path tmp, Pat
   public Path tmp(String first, String... more) {
     return tmp.resolve(Path.of(first, more));
   }
+
+  public Path tools(String name, String version) {
+    return tools().resolve(name + '@' + version);
+  }
 }
