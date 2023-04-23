@@ -4,14 +4,18 @@ import java.io.PrintWriter;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.StringJoiner;
+import java.util.TreeMap;
 import java.util.spi.ToolProvider;
 import jdk.tools.Tool;
 import jdk.tools.ToolFinder;
 import jdk.tools.ToolMenu;
 import jdk.tools.ToolOperator;
 import jdk.tools.ToolRunner;
+import run.duke.DukeBrowser;
 
 public record FileMenu(String name, ToolFinder items) implements ToolMenu {
+  private static final DukeBrowser BROWSER = DukeBrowser.ofSystem();
+
   public FileMenu() {
     this(
         "file",
@@ -19,6 +23,7 @@ public record FileMenu(String name, ToolFinder items) implements ToolMenu {
             Tool.of("run.duke/file", new Checksum("checksum")),
             Tool.of("run.duke/file", new Download("download")),
             Tool.of("run.duke/file", new Extract("extract")),
+            Tool.of("run.duke/file", new Head("head")),
             Tool.of("run.duke/file", new Read("read"))));
   }
 
@@ -43,7 +48,7 @@ public record FileMenu(String name, ToolFinder items) implements ToolMenu {
     public int run(ToolRunner runner, PrintWriter out, PrintWriter err, String... args) {
       var source = URI.create(args[0]);
       var target = Path.of(args[1]);
-      // runner.workbench().browser().download(source, target);
+      BROWSER.download(source, target);
       return 0;
     }
   }
@@ -69,8 +74,21 @@ public record FileMenu(String name, ToolFinder items) implements ToolMenu {
     @Override
     public int run(ToolRunner runner, PrintWriter out, PrintWriter err, String... args) {
       var uri = URI.create(args[0]);
-      // var text = runner.workbench().browser().read(uri);
-      // out.println(text);
+      var raw = BROWSER.read(uri);
+      var text = raw.stripTrailing();
+      if (raw.equals(text)) out.println(text);
+      else out.print(raw);
+      return 0;
+    }
+  }
+
+  record Head(String name) implements ToolOperator {
+    @Override
+    public int run(ToolRunner runner, PrintWriter out, PrintWriter err, String... args) {
+      var uri = URI.create(args[0]);
+      var headers = BROWSER.headers(uri);
+      var map = new TreeMap<>(headers.map());
+      map.forEach((key, value) -> out.println(key + " -> " + String.join(" ++ ", value)));
       return 0;
     }
   }
