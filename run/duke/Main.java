@@ -14,6 +14,13 @@ class Main {
     } catch (ToolNotFoundException throwable) {
       System.err.println(throwable.getMessage());
       System.exit(1);
+    } catch (RuntimeException throwable) {
+      var message = throwable.getMessage();
+      if (message != null) {
+        var text = message.stripTrailing();
+        text.lines().forEach(line -> System.err.println("| " + line));
+      }
+      System.exit(2);
     } catch (Throwable throwable) {
       throwable.printStackTrace(System.err);
       System.exit(-1);
