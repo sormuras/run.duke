@@ -12,6 +12,7 @@ import jdk.tools.Tool;
 import jdk.tools.ToolFinder;
 import jdk.tools.ToolOperator;
 import jdk.tools.ToolPrinter;
+import jdk.tools.Tools;
 
 public record DukeToolProvider(String name) implements ToolProvider {
   public DukeToolProvider() {
@@ -107,7 +108,7 @@ public record DukeToolProvider(String name) implements ToolProvider {
   static String toToolsMessage(List<Tool> tools) {
     var lines = new StringJoiner("\n");
     lines.add("Tools");
-    for (var tool : tools) lines.add(tool.toNamespaceAndName());
+    lines.add(Tools.toTextBlock(tools));
     lines.add("    %d tool%s%n".formatted(tools.size(), tools.size() == 1 ? "" : "s"));
     return lines.toString();
   }
